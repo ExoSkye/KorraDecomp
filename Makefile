@@ -1,4 +1,4 @@
-include $(PSL1GHT)/base_rules
+#include $(PSL1GHT)/base_rules
 
 .SUFFIXES:
 
@@ -14,22 +14,32 @@ ifndef VERBOSE
   VERB := @
 endif
 
-SCETOOL			:=	scetool$(POSTFIX)
+SCETOOL				:=	scetool$(POSTFIX)
+
+ifndef PLAIN
+  COLOR_RED			:= \033[K\033[0;31m
+  COLOR_GREEN		:= \033[K\033[0;32m
+  COLOR_RESET		:= \033[0m
+else
+  COLOR_RED			:=
+  COLOR_GREEN		:=
+  COLOR_RESET		:=
+endif
 
 $(SCETOOL):
-	@printf "\033[K\033[0;32mBuilding SCETool\033[1;32m\033[0;32m...\033[0m\n"
+	@printf "$(COLOR_GREEN)Building SCETool...$(COLOR_RESET)\n"
 	$(VERB) @$(MAKE) -C Tools/scetool --no-print-directory
 
 check_python3:
 	$(VERB) pkg-config --exists python3
 
 check_hashes:
-	@printf "\033[K\033[0;32mChecking game hashes\033[1;32m\033[0;32m...\033[0m\n"
-	$(VERB) python3 Tools/check.py GameFiles/NPEB02082.sha512 GameFiles > /dev/null || (echo "\033[K\033[0;31mHash Mismatch.\033[0m\n"; exit 1)
-	@printf "\033[K\033[0;32mHashes match\033[0m\n"
+	@printf "$(COLOR_GREEN)Checking game hashes\033[1;32m\033[0;32m...\033[0m\n"
+	$(VERB) python3 Tools/check.py GameFiles/NPEB02082.sha512 GameFiles > /dev/null || (echo "$(COLOR_RED)Hash Mismatch.$(COLOR_RESET)"; exit 1)
+	@printf "$(COLOR_GREEN)Hashes match$(COLOR_RESET)\n"
 
 copy_extracted_data:
-	@printf "\033[K\033[0;32mCopying extracted PS3 data to SCETool directory\033[1;32m\033[0;32m...\033[0m\n"
+	@printf "$(COLOR_GREEN)Copying extracted PS3 data to SCETool directory...$(COLOR_RESET)\n"
 	$(VERB) mkdir -p Tools/scetool/data
 	$(VERB) mkdir -p Tools/scetool/rifs
 	$(VERB) cp PS3Data/keys Tools/scetool/data
@@ -40,11 +50,11 @@ copy_extracted_data:
 	$(VERB) cp PS3Data/*.rif Tools/scetool/rifs 
 
 Work/EBOOT.elf: $(SCETOOL) copy_extracted_data check_hashes
-	@printf "\033[K\033[0;32mExtracting EBOOT.BIN\033[1;32m\033[0;32m...\033[0m\n"
+	@printf "$(COLOR_GREEN)Extracting EBOOT.BIN...$(COLOR_RESET)\n"
 	$(VERB) mkdir Work
 	$(VERB) cd Tools/scetool/ && ./scetool -v -d ../../GameFiles/NPEB02082/USRDIR/EBOOT.BIN ../../Work/EBOOT.elf
 
 clean:
-	@printf "\033[K\033[0;32mCleaning\033[1;32m\033[0;32m...\033[0m\n"
+	@printf "$(COLOR_GREEN)Cleaning...$(COLOR_RESET)\n"
 	$(VERB) @$(MAKE) -C Tools/scetool clean --no-print-directory
 	$(VERB) rm -rf Work/*
