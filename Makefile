@@ -42,17 +42,46 @@ copy_extracted_data:
 	@printf "$(COLOR_GREEN)Copying extracted PS3 data to SCETool directory...$(COLOR_RESET)\n"
 	$(VERB) mkdir -p Tools/scetool/data
 	$(VERB) mkdir -p Tools/scetool/rifs
-	$(VERB) cp PS3Data/keys Tools/scetool/data
-	$(VERB) cp PS3Data/ldr_curves Tools/scetool/data
-	$(VERB) cp PS3Data/vsh_curves Tools/scetool/data
-	$(VERB) cp PS3Data/act.dat Tools/scetool/data
-	$(VERB) cp PS3Data/idps	Tools/scetool/data
-	$(VERB) cp PS3Data/*.rif Tools/scetool/rifs 
+	$(VERB) cp -v PS3Data/keys Tools/scetool/data
+	$(VERB) cp -v PS3Data/ldr_curves Tools/scetool/data
+	$(VERB) cp -v PS3Data/vsh_curves Tools/scetool/data
+	$(VERB) cp -v PS3Data/act.dat Tools/scetool/data
+	$(VERB) cp -v PS3Data/idps	Tools/scetool/data
+	$(VERB) cp -v PS3Data/*.rif Tools/scetool/rifs 
 
 Work/EBOOT.elf: $(SCETOOL) copy_extracted_data check_hashes
 	@printf "$(COLOR_GREEN)Extracting EBOOT.BIN...$(COLOR_RESET)\n"
 	$(VERB) mkdir Work
 	$(VERB) cd Tools/scetool/ && ./scetool -v -d ../../GameFiles/NPEB02082/USRDIR/EBOOT.BIN ../../Work/EBOOT.elf
+
+Work/EBOOT.BIN: Work/EBOOT.elf $(SCETOOL)
+	@printf "$(COLOR_GREEN)Encrypting EBOOT.elf to EBOOT.BIN...$(COLOR_RESET)\n"
+	$(VERB) cd Tools/scetool/ && ./scetool \
+						--verbose \
+                    	--sce-type=SELF" \                       
+					   	--skip-sections=FALSE"\
+                       	--self-add-shdrs=TRUE"\
+                       	--compress-data=TRUE"\
+                       	--key-revision=0A"\
+                       	--self-app-version=0001000000000000"\
+                       	--self-auth-id=1010000001000003"\
+                       	--self-vendor-id=01000002"\
+                       	--self-ctrl-flags=0000000000000000000000000000000000000000000000000000000000000000"\
+                       	--self-cap-flags=00000000000000000000000000000000000000000000003B0000000100040000"\
+                       	--self-type=NPDRM"\
+                       	--self-fw-version=0003005500000000"\
+                       	--np-license-type=FREE"\
+                       	--np-app-type=SPRX"\
+                       	--np-content-id={contentID}"\
+                       	--np-real-fname=EBOOT.BIN"\
+                       	--encrypt TODO
+
+pkg: Work/EBOOT.BIN check_hashes
+	@printf "$(COLOR_GREEN)Packaging...$(COLOR_RESET)\n"
+	$(VERB) mkdir pkg
+	$(VERB) cp GameFiles/NPEB02082/* pkg -r
+	$(VERB) cp Work/EBOOT.BIN pkg/USRDIR/EBOOT.BIN 
+	# TODO: Add actual 
 
 clean:
 	@printf "$(COLOR_GREEN)Cleaning...$(COLOR_RESET)\n"
