@@ -1,0 +1,7 @@
+GameFiles/NPEB02082/
+PS3Data/act.dat
+PS3Data/idps
+PS3Data/*.rif
+PS3Data/*.rap
+Work/*
+Ghidra/*
