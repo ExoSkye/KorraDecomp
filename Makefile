@@ -51,15 +51,15 @@ copy_extracted_data:
 
 Work/EBOOT.elf: $(SCETOOL) copy_extracted_data check_hashes
 	@printf "$(COLOR_GREEN)Extracting EBOOT.BIN...$(COLOR_RESET)\n"
-	$(VERB) mkdir Work
+	$(VERB) mkdir -p Work
 	$(VERB) cd Tools/scetool/ && ./scetool -v -d ../../GameFiles/NPEB02082/USRDIR/EBOOT.BIN ../../Work/EBOOT.elf
 
 Work/EBOOT.BIN: Work/EBOOT.elf $(SCETOOL)
 	@printf "$(COLOR_GREEN)Encrypting EBOOT.elf to EBOOT.BIN...$(COLOR_RESET)\n"
 	$(VERB) cd Tools/scetool/ && ./scetool \
-						--verbose \
+			--verbose \
                     	--sce-type=SELF" \                       
-					   	--skip-sections=FALSE"\
+			--skip-sections=FALSE"\
                        	--self-add-shdrs=TRUE"\
                        	--compress-data=TRUE"\
                        	--key-revision=0A"\
