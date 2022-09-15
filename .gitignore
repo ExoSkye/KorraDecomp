@@ -5,3 +5,11 @@ PS3Data/*.rif
 PS3Data/*.rap
 Work/*
 Ghidra/*
+
+GameFiles/.hash_correct
+
+korra.pkg
+
+pkg/
+
+target/
