@@ -1,4 +1,4 @@
-include $(PSL1GHT)/base_rules
+#include $(PSL1GHT)/base_rules
 
 export PATH     	:=  $(PS3DEV)/bin:$(PS3DEV)/ppu/bin:$(PATH)
 
@@ -16,7 +16,8 @@ ifndef VERBOSE
   VERB := @
 endif
 
-SCETOOL			:=	scetool$(POSTFIX)
+SCETOOL_TGT			:=	Tools/scetool/scetool$(POSTFIX)
+SCETOOL				:= 	scetool$(POSTFIX)
 
 ifndef PLAIN
   COLOR_RED		:= \033[K\033[0;31m
@@ -33,12 +34,10 @@ SFO			:= sfo.py
 APPID			:= KORRA1000
 CONTENTID		:= EP0002-$(APPID)_00-LEGENDOFKORRAPS3
 
-.PHONY: all clean check_python3 check_python2 copy_extracted_data decrypt fixed_pkgcrypt pkg
-
 all:
 	@printf "$(COLOR_RED)Please choose either the decrypt or pkg target$(COLOR_RESET)\n"
 
-$(SCETOOL):
+$(SCETOOL_TGT):
 	@printf "$(COLOR_GREEN)Building SCETool...$(COLOR_RESET)\n"
 	$(VERB) @$(MAKE) -C Tools/scetool --no-print-directory
 
@@ -48,31 +47,30 @@ check_python3:
 check_python2:
 	$(VERB) pkg-config --exists python2
 
-check_hashes:
+GameFiles/.hash_correct:
 	@printf "$(COLOR_GREEN)Checking game hashes...$(COLOR_RESET)\n"
-	$(VERB) python3 Tools/check.py GameFiles/NPEB02082.sha512 GameFiles > /dev/null || (echo "$(COLOR_RED)Hash Mismatch.$(COLOR_RESET)"; exit 1)
+	$(VERB) python3 Tools/check.py GameFiles/NPEB02082.sha512 GameFiles > /dev/null || (echo "$(COLOR_RED)Hash Mismatch$(COLOR_RESET)"; exit 1)
 	@printf "$(COLOR_GREEN)Hashes match$(COLOR_RESET)\n"
 
-copy_extracted_data:
-	@printf "$(COLOR_GREEN)Copying extracted PS3 data to SCETool directory...$(COLOR_RESET)\n"
-	$(VERB) mkdir -p Tools/scetool/data
-	$(VERB) mkdir -p Tools/scetool/rifs
-	$(VERB) cp -v PS3Data/keys 		Tools/scetool/data
-	$(VERB) cp -v PS3Data/ldr_curves 	Tools/scetool/data
-	$(VERB) cp -v PS3Data/vsh_curves 	Tools/scetool/data
-	$(VERB) cp -v PS3Data/act.dat 		Tools/scetool/data
-	$(VERB) cp -v PS3Data/idps		Tools/scetool/data
-	$(VERB) cp -v PS3Data/*.rif 		Tools/scetool/rifs
+include PS3Data/Makefile
 
 decrypt: Work/EBOOT.elf
 	@printf "$(COLOR_GREEN)Decrypted EBOOT.BIN to Work/EBOOT.elf$(COLOR_RESET)\n"
 
-Work/EBOOT.elf: $(SCETOOL) copy_extracted_data check_hashes
+
+DATA_DIR			:= Tools/scetool/data
+RID_FIR				:= Tools/scetool/rifs
+REQUIRED_FILES		:= $(DATA_DIR)/keys $(DATA_DIR)/ldr_curves $(DATA_DIR)/vsh_curves $(DATA_DIR)/act.dat $(DATA_DIR)/idps $(RID_FIR)/EP0002-NPEB02082_00-LEGENDOFKORRAPS3.rif
+
+copy_extracted_data: $(REQUIRED_FILES)
+	@printf "$(COLOR_GREEN)Copied extracted PS3 data to SCETool directory...$(COLOR_RESET)\n"
+
+Work/EBOOT.elf: $(SCETOOL_TGT) GameFiles/.hash_correct copy_extracted_data
 	@printf "$(COLOR_GREEN)Extracting EBOOT.BIN...$(COLOR_RESET)\n"
 	$(VERB) mkdir -p Work
 	$(VERB) cd Tools/scetool/ && ./scetool -v -d ../../GameFiles/NPEB02082/USRDIR/EBOOT.BIN ../../Work/EBOOT.elf
 
-Work/EBOOT.BIN: Work/EBOOT.elf $(SCETOOL)
+Work/EBOOT.BIN: Work/EBOOT.elf $(SCETOOL_TGT)
 	@printf "$(COLOR_GREEN)Encrypting EBOOT.elf to EBOOT.BIN...$(COLOR_RESET)\n"
 	$(VERB) cd Tools/scetool/ && ./scetool \
 			--verbose \
@@ -98,7 +96,7 @@ fixed_pkgcrypt: check_python2
 	@printf "$(COLOR_GREEN)Building patched pkgcrypt.so for pkg.py$(COLOR_RESET)\n"
 	$(VERB) @$(MAKE) install -C Tools/PKGCrypt --no-print-directory
 
-pkg: Work/EBOOT.BIN check_hashes fixed_pkgcrypt
+pkg: Work/EBOOT.BIN GameFiles/.hash_correct fixed_pkgcrypt
 	@printf "$(COLOR_GREEN)Packaging...$(COLOR_RESET)\n"
 	$(VERB) mkdir -p target
 	$(VERB) cp GameFiles/NPEB02082/* target -r
@@ -113,3 +111,4 @@ clean:
 	$(VERB) rm -rf Work/*
 	$(VERB) rm -rf pkg/*
 	
+.PHONY : all clean check_python3 check_python2 copy_extracted_data decrypt fixed_pkgcrypt pkg
