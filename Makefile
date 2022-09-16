@@ -33,6 +33,11 @@ SFO			:= sfo.py
 APPID			:= KORRA1000
 CONTENTID		:= EP0002-$(APPID)_00-LEGENDOFKORRAPS3
 
+.PHONY: all clean check_python3 check_python2 copy_extracted_data decrypt fixed_pkgcrypt pkg
+
+all:
+	@printf "$(COLOR_RED)Please choose either the decrypt or pkg target$(COLOR_RESET)\n"
+
 $(SCETOOL):
 	@printf "$(COLOR_GREEN)Building SCETool...$(COLOR_RESET)\n"
 	$(VERB) @$(MAKE) -C Tools/scetool --no-print-directory
@@ -57,7 +62,10 @@ copy_extracted_data:
 	$(VERB) cp -v PS3Data/vsh_curves 	Tools/scetool/data
 	$(VERB) cp -v PS3Data/act.dat 		Tools/scetool/data
 	$(VERB) cp -v PS3Data/idps		Tools/scetool/data
-	$(VERB) cp -v PS3Data/*.rif 		Tools/scetool/rifs 
+	$(VERB) cp -v PS3Data/*.rif 		Tools/scetool/rifs
+
+decrypt: Work/EBOOT.elf
+	@printf "$(COLOR_GREEN)Decrypted EBOOT.BIN to Work/EBOOT.elf$(COLOR_RESET)\n"
 
 Work/EBOOT.elf: $(SCETOOL) copy_extracted_data check_hashes
 	@printf "$(COLOR_GREEN)Extracting EBOOT.BIN...$(COLOR_RESET)\n"
@@ -101,4 +109,7 @@ pkg: Work/EBOOT.BIN check_hashes fixed_pkgcrypt
 clean:
 	@printf "$(COLOR_GREEN)Cleaning...$(COLOR_RESET)\n"
 	$(VERB) @$(MAKE) -C Tools/scetool clean --no-print-directory
+	$(VERB) @$(MAKE) -C Tools/PKGCrypt clean --no-print-directory
 	$(VERB) rm -rf Work/*
+	$(VERB) rm -rf pkg/*
+	
