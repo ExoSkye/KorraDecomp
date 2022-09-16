@@ -65,7 +65,7 @@ REQUIRED_FILES		:= $(DATA_DIR)/keys $(DATA_DIR)/ldr_curves $(DATA_DIR)/vsh_curve
 copy_extracted_data: $(REQUIRED_FILES)
 	@printf "$(COLOR_GREEN)Copied extracted PS3 data to SCETool directory...$(COLOR_RESET)\n"
 
-Work/EBOOT.elf: $(SCETOOL_TGT) GameFiles/.hash_correct copy_extracted_data
+Work/EBOOT.elf: $(SCETOOL_TGT) GameFiles/.hash_correct $(REQUIRED_FILES)
 	@printf "$(COLOR_GREEN)Extracting EBOOT.BIN...$(COLOR_RESET)\n"
 	$(VERB) mkdir -p Work
 	$(VERB) cd Tools/scetool/ && ./scetool -v -d ../../GameFiles/NPEB02082/USRDIR/EBOOT.BIN ../../Work/EBOOT.elf
